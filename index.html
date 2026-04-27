@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Find Your Music Personality</title>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="ca931347-4122-484d-aab4-5cd894c34327"></script>
   <style>
     :root {
       --bg: #071019;
@@ -26,10 +27,15 @@
       box-sizing: border-box;
     }
 
+    html {
+      height: 100%;
+    }
+
     html,
     body {
       margin: 0;
       min-height: 100%;
+      height: 100%;
       background: var(--bg);
       color: var(--text);
       font-family: "SF Pro Display", "Inter", "Helvetica Neue", Arial, sans-serif;
@@ -50,7 +56,9 @@
 
     .app {
       position: relative;
+      height: 100%;
       min-height: 100vh;
+      min-height: 100dvh;
       background:
         radial-gradient(circle at 15% 20%, rgba(158, 220, 255, 0.11), transparent 22%),
         radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.06), transparent 16%),
@@ -98,15 +106,15 @@
 
     .screens {
       position: relative;
+      height: 100%;
       min-height: 100vh;
+      min-height: 100dvh;
     }
 
     .screen {
       position: absolute;
       inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 86px 18px 26px;
+      display: block;
       opacity: 0;
       visibility: hidden;
       transform: translate3d(0, 28px, 0) scale(1.015);
@@ -117,7 +125,20 @@
       background-image: var(--bg-image); /* Replace URL here */
       background-size: cover;
       background-position: center;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+    }
+
+    .screen-inner {
+      box-sizing: border-box;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 86px 18px 26px;
     }
 
     .screen::before {
@@ -418,7 +439,7 @@
     }
 
     @media (max-width: 640px) {
-      .screen {
+      .screen-inner {
         padding-top: 80px;
       }
 
@@ -491,6 +512,7 @@
         data-screen="intro"
         style="--bg-image:url('https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1600&q=80')"
       >
+        <div class="screen-inner">
         <div class="panel">
           <p class="eyebrow">Music Personality Test</p>
           <h1 class="title">Find Your Music Personality</h1>
@@ -500,6 +522,7 @@
           <div class="btn-row">
             <button class="btn primary" id="startBtn">Start</button>
           </div>
+        </div>
         </div>
       </section>
 
@@ -539,6 +562,7 @@
         data-screen="result"
         style="--bg-image:url('https://images.unsplash.com/photo-1504609773096-104ff2c73ba4?auto=format&fit=crop&w=1600&q=80')"
       >
+        <div class="screen-inner">
         <div class="panel result-panel">
           <div class="result-card">
             <p class="section-label">Personality Type</p>
@@ -560,6 +584,7 @@
               <button class="btn" id="shareBtn">Share Result</button>
             </div>
           </div>
+        </div>
         </div>
       </section>
     </main>
@@ -801,31 +826,33 @@
       quizData.forEach((question, index) => {
         const screen = document.querySelector(`[data-screen="question-${index + 1}"]`);
         screen.innerHTML = `
-          <div class="panel">
-            <div class="question-top">
-              <div class="question-index">Question ${index + 1} / 6</div>
-              <h2 class="question-title">${question.title}</h2>
-              <p class="question-hint">${question.hint}</p>
-            </div>
+          <div class="screen-inner">
+            <div class="panel">
+              <div class="question-top">
+                <div class="question-index">Question ${index + 1} / 6</div>
+                <h2 class="question-title">${question.title}</h2>
+                <p class="question-hint">${question.hint}</p>
+              </div>
 
-            <div class="options">
-              ${question.options.map((option, optionIndex) => `
-                <button
-                  class="option"
-                  type="button"
-                  data-question="${question.id}"
-                  data-option="${option.key}"
-                  style="--delay:${optionIndex}"
-                >
-                  <span class="option-key">${option.key}</span>
-                  <span class="option-text">${option.text}</span>
-                  <span class="option-dot" aria-hidden="true"></span>
-                </button>
-              `).join("")}
-            </div>
+              <div class="options">
+                ${question.options.map((option, optionIndex) => `
+                  <button
+                    class="option"
+                    type="button"
+                    data-question="${question.id}"
+                    data-option="${option.key}"
+                    style="--delay:${optionIndex}"
+                  >
+                    <span class="option-key">${option.key}</span>
+                    <span class="option-text">${option.text}</span>
+                    <span class="option-dot" aria-hidden="true"></span>
+                  </button>
+                `).join("")}
+              </div>
 
-            <div class="question-footer">
-              <button class="btn" type="button" data-nav="prev">Back</button>
+              <div class="question-footer">
+                <button class="btn" type="button" data-nav="prev">Back</button>
+              </div>
             </div>
           </div>
         `;
@@ -855,6 +882,12 @@
         screen.classList.toggle("active", screen.dataset.screen === screenOrder[state.currentScreen]);
       });
       updateProgress();
+      const activeScreen = screens.find(
+        (screen) => screen.dataset.screen === screenOrder[state.currentScreen]
+      );
+      if (activeScreen) {
+        activeScreen.scrollTop = 0;
+      }
     }
 
     function setSelected(questionId, optionKey) {
